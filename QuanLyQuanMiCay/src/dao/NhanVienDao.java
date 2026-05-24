@@ -148,4 +148,36 @@ public class NhanVienDao {
             e.printStackTrace();
         }
     }
+    public NhanVien getById(int id) {
+        String sql = "SELECT id, ten, tai_khoan, mat_khau, vai_tro, ngay_tao, trang_thai FROM nhan_vien WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DBConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, id);
+            rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return new NhanVien(
+                    rs.getInt("id"),
+                    rs.getString("ten"),
+                    rs.getString("tai_khoan"),
+                    rs.getString("mat_khau"),
+                    rs.getString("vai_tro"),
+                    rs.getTimestamp("ngay_tao"),
+                    rs.getBoolean("trang_thai")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try { if (rs != null) rs.close(); } catch (Exception e) {}
+            try { if (pstmt != null) pstmt.close(); } catch (Exception e) {}
+            try { if (conn != null) conn.close(); } catch (Exception e) {}
+        }
+        return null;
+    }
 }

@@ -6,6 +6,8 @@ import service.QuanLyBanService;
 import service.ThanhToanService;
 import util.NumberUtils;
 import util.UiTheme;
+import util.PDFUtils;
+import view.dialog.ChuyenKhoanDialog;
 import view.frame.MainFrame;
 
 import javax.swing.*;
@@ -13,6 +15,7 @@ import javax.swing.event.CellEditorListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
+import java.io.File;
 import java.util.EventObject;
 import java.util.List;
 
@@ -58,6 +61,7 @@ public class HoaDonPanel extends JPanel {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
+        // Tạm tính
         gbc.gridx = 0; gbc.gridy = 0;
         JLabel lblTamTinhTitle = new JLabel("Tạm tính:");
         UiTheme.label(lblTamTinhTitle);
@@ -67,6 +71,7 @@ public class HoaDonPanel extends JPanel {
         gbc.gridx = 1;
         totalPanel.add(lblTamTinh, gbc);
 
+        // Giảm giá
         gbc.gridx = 0; gbc.gridy = 1;
         JLabel lblGiamGiaTitle = new JLabel("Giảm giá:");
         UiTheme.label(lblGiamGiaTitle);
@@ -87,6 +92,7 @@ public class HoaDonPanel extends JPanel {
         gbc.gridx = 1;
         totalPanel.add(giamGiaPanel, gbc);
 
+        // Tổng cộng
         gbc.gridx = 0; gbc.gridy = 2;
         JLabel lblTongTitle = new JLabel("TỔNG CỘNG:");
         UiTheme.label(lblTongTitle);
@@ -97,6 +103,7 @@ public class HoaDonPanel extends JPanel {
         gbc.gridx = 1;
         totalPanel.add(lblTongCong, gbc);
 
+        // Buttons
         gbc.gridx = 0; gbc.gridy = 3;
         gbc.gridwidth = 2;
         JPanel btnPanel = new JPanel(new GridLayout(1, 2, 10, 0));
@@ -213,44 +220,147 @@ public class HoaDonPanel extends JPanel {
         }
     }
 
+    /**
+     * Xử lý thanh toán hóa đơn
+     * Cho phép chọn phương thức thanh toán (Tiền mặt / Chuyển khoản)
+     */
     private void thanhToan() {
-        if (currentHoaDonId != -1) {
-            int confirm = JOptionPane.showConfirmDialog(this, "Xác nhận thanh toán hóa đơn?", "Thanh toán", JOptionPane.YES_NO_OPTION);
+        if (currentHoaDonId != -1 && tableModel.getRowCount() > 0) {
+            // Dialog chọn phương thức thanh toán
+            JPanel paymentPanel = new JPanel(new GridLayout(3, 1, 10, 10));
+            paymentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            
+            JLabel lblTitle = new JLabel("Chọn phương thức thanh toán:");
+            lblTitle.setFont(new Font("Arial", Font.BOLD, 14));
+            
+            JRadioButton rbTienMat = new JRadioButton("💰 Tiền mặt", true);
+            JRadioButton rbChuyenKhoan = new JRadioButton("🏦 Chuyển khoản");
+            ButtonGroup group = new ButtonGroup();
+            group.add(rbTienMat);
+            group.add(rbChuyenKhoan);
+            
+            JPanel radioPanel = new JPanel(new GridLayout(2, 1));
+            radioPanel.add(rbTienMat);
+            radioPanel.add(rbChuyenKhoan);
+            
+            paymentPanel.add(lblTitle);
+            paymentPanel.add(radioPanel);
+            
+            int option = JOptionPane.showConfirmDialog(this, paymentPanel, 
+                            "THANH TOÁN HÓA ĐƠN", 
+                            JOptionPane.OK_CANCEL_OPTION, 
+                            JOptionPane.QUESTION_MESSAGE);
+            
+            if (option != JOptionPane.OK_OPTION) {
+                return;
+            }
+            
+            String phuongThuc = rbTienMat.isSelected() ? "TIỀN MẶT" : "CHUYỂN KHOẢN";
+            HoaDon hoaDon = ThanhToanService.getHoaDon(currentHoaDonId);
+            double tongTien = hoaDon.getThanhTien();
+            
+            // Nếu là chuyển khoản, hiển thị dialog QR
+            if (phuongThuc.equals("CHUYỂN KHOẢN")) {
+                String maHoaDon = "HD" + currentHoaDonId;
+                ChuyenKhoanDialog qrDialog = new ChuyenKhoanDialog(mainFrame, tongTien, maHoaDon);
+                qrDialog.setVisible(true);
+                
+                int confirm = JOptionPane.showConfirmDialog(this,
+                    "✅ Đã hoàn tất thanh toán chuyển khoản?",
+                    "Xác nhận",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+                
+                if (confirm != JOptionPane.YES_OPTION) {
+                    return;
+                }
+            }
+            
+            // Xác nhận thanh toán
+            int confirm = JOptionPane.showConfirmDialog(this, 
+                String.format("Xác nhận thanh toán hóa đơn?\n\n📝 Phương thức: %s\n💰 Tổng tiền: %s\n\nTiếp tục?", 
+                    phuongThuc, NumberUtils.formatVND(tongTien)), 
+                "XÁC NHẬN THANH TOÁN", 
+                JOptionPane.YES_NO_OPTION, 
+                JOptionPane.INFORMATION_MESSAGE);
+            
             if (confirm == JOptionPane.YES_OPTION) {
+                // Thực hiện thanh toán
                 ThanhToanService.thanhToan(currentHoaDonId);
                 QuanLyBanService.updateTrangThaiBan(currentBan, "Trống", -1);
-                JOptionPane.showMessageDialog(this, "Thanh toán thành công!");
+                
+                // Lấy lại thông tin hóa đơn sau khi thanh toán
+                hoaDon = ThanhToanService.getHoaDon(currentHoaDonId);
+                List<ChiTietHoaDon> chiTietList = ThanhToanService.getChiTietHoaDon(currentHoaDonId);
+                
+                // Thông báo thành công
+                JOptionPane.showMessageDialog(this, 
+                    String.format("✅ THANH TOÁN THÀNH CÔNG!\n\n📝 Phương thức: %s\n💰 Tổng tiền: %s\n👨‍💼 Nhân viên: %s", 
+                        phuongThuc, NumberUtils.formatVND(tongTien), mainFrame.getNhanVien().getTen()), 
+                    "Thành công", 
+                    JOptionPane.INFORMATION_MESSAGE);
+                
+                // Hỏi in hóa đơn
+                int inHoaDon = JOptionPane.showConfirmDialog(this, 
+                    "🖨️ Bạn có muốn in hóa đơn PDF không?", 
+                    "In hóa đơn", 
+                    JOptionPane.YES_NO_OPTION, 
+                    JOptionPane.QUESTION_MESSAGE);
+                
+                if (inHoaDon == JOptionPane.YES_OPTION) {
+                    JFileChooser fileChooser = new JFileChooser();
+                    fileChooser.setDialogTitle("Chọn nơi lưu hóa đơn PDF");
+                    fileChooser.setCurrentDirectory(new File(System.getProperty("user.home") + "/Documents"));
+                    fileChooser.setSelectedFile(new File("HoaDon_" + currentHoaDonId + "_" + System.currentTimeMillis() + ".pdf"));
+                    
+                    int fileResult = fileChooser.showSaveDialog(this);
+                    if (fileResult == JFileChooser.APPROVE_OPTION) {
+                        String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+                        if (!filePath.endsWith(".pdf")) {
+                            filePath += ".pdf";
+                        }
+                        PDFUtils.exportHoaDonToPDF(hoaDon, chiTietList, filePath, phuongThuc, mainFrame.getNhanVien().getTen());
+                        JOptionPane.showMessageDialog(this, "✅ Đã lưu hóa đơn PDF tại:\n" + filePath);
+                    }
+                }
+                
+                // Refresh giao diện
                 mainFrame.refreshBanPanel();
                 clearHoaDon();
                 currentBan = -1;
                 currentHoaDonId = -1;
             }
+        } else {
+            JOptionPane.showMessageDialog(this, "Không có hóa đơn nào để thanh toán!");
         }
     }
 
+    /**
+     * In hóa đơn ra file PDF (trước khi thanh toán)
+     */
     private void inHoaDon() {
         if (currentHoaDonId != -1 && tableModel.getRowCount() > 0) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("========== TVT MÌ CAY ==========\n");
-            sb.append("Ngày: ").append(new java.util.Date()).append("\n");
-            sb.append("================================\n");
-            for (int i = 0; i < tableModel.getRowCount(); i++) {
-                sb.append(tableModel.getValueAt(i, 1)).append(" x")
-                  .append(tableModel.getValueAt(i, 2)).append("\t")
-                  .append(tableModel.getValueAt(i, 4)).append("\n");
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Chọn nơi lưu hóa đơn PDF");
+            fileChooser.setCurrentDirectory(new File(System.getProperty("user.home") + "/Documents"));
+            fileChooser.setSelectedFile(new File("HoaDon_" + currentHoaDonId + ".pdf"));
+            
+            int result = fileChooser.showSaveDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+                if (!filePath.endsWith(".pdf")) {
+                    filePath += ".pdf";
+                }
+                
+                HoaDon hoaDon = ThanhToanService.getHoaDon(currentHoaDonId);
+                List<ChiTietHoaDon> chiTietList = ThanhToanService.getChiTietHoaDon(currentHoaDonId);
+                
+                PDFUtils.exportHoaDonToPDF(hoaDon, chiTietList, filePath, "CHƯA THANH TOÁN", mainFrame.getNhanVien().getTen());
+                
+                JOptionPane.showMessageDialog(this, "✅ Đã lưu hóa đơn PDF tại:\n" + filePath);
             }
-            sb.append("================================\n");
-            sb.append("Tạm tính: ").append(lblTamTinh.getText()).append("\n");
-            sb.append("Giảm giá: -").append(txtGiamGia.getText()).append(" ₫\n");
-            sb.append("TỔNG CỘNG: ").append(lblTongCong.getText()).append("\n");
-            sb.append("================================\n");
-            sb.append("Cảm ơn quý khách!\n");
-
-            JTextArea textArea = new JTextArea(sb.toString());
-            textArea.setFont(UiTheme.plain(12));
-            textArea.setBackground(UiTheme.CARD);
-            textArea.setForeground(UiTheme.TEXT);
-            JOptionPane.showMessageDialog(this, new JScrollPane(textArea), "In hóa đơn", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, "Không có dữ liệu để in hóa đơn!");
         }
     }
 

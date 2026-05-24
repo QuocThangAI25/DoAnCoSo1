@@ -297,6 +297,10 @@ public class MainFrame extends JFrame {
                 "Thông tin", JOptionPane.INFORMATION_MESSAGE);
 
     }
+ // Thêm method này vào cuối class, trước dấu đóng ngoặc nhọn cuối cùng
+    public NhanVien getNhanVien() {
+        return this.nhanVien;
+    }
 
 }
 
