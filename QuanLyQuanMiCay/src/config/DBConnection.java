@@ -5,12 +5,22 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection {
-    private static final String URL = "jdbc:mysql://localhost:3306/quanly_quan_mi_cay?useSSL=false&characterEncoding=utf8";
-    private static final String USER = "root";
-    private static final String PASSWORD = "";
+    private static final String URL;
+    private static final String USER;
+    private static final String PASSWORD;
 
     private static boolean driverLoaded;
     private static boolean connectionLogged;
+
+    static {
+        String host = Config.get("db.host", "localhost");
+        String port = Config.get("db.port", "3306");
+        String name = Config.get("db.name", "quanly_quan_mi_cay");
+        String charset = Config.get("db.charset", "utf8");
+        URL = String.format("jdbc:mysql://%s:%s/%s?useSSL=false&characterEncoding=%s", host, port, name, charset);
+        USER = Config.get("db.user", "root");
+        PASSWORD = Config.get("db.password", "");
+    }
 
     public static Connection getConnection() {
         try {

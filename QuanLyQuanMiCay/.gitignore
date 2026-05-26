@@ -1,0 +1,21 @@
+# Build output
+bin/
+*.class
+# keep library jars in repo (don't ignore lib/*.jar)
+*.jar
+!lib/*.jar
+
+# IDE
+.settings/
+.classpath
+.project
+
+# Local config
+/src/config.properties
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

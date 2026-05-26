@@ -1,6 +1,26 @@
+
+### **4. Cập nhật .gitignore:**
+```gitignore
 # Build output
 bin/
 *.class
+*.jar
+*.war
 
-# IDE
+# IDE & Config
 .settings/
+.classpath
+.project
+*.swp
+*.swo
+*~
+
+# Config files (chứa password)
+src/config.properties
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

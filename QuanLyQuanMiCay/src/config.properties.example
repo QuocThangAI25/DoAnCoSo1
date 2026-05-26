@@ -1,0 +1,11 @@
+# Database Configuration
+db.host=localhost
+db.port=3306
+db.name=quanly_quan_mi_cay
+db.user=root
+db.password=
+db.charset=utf8
+
+# Application
+app.name=QuanLyQuanMiCay
+app.version=1.0

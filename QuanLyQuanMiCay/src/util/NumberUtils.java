@@ -4,7 +4,8 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 public class NumberUtils {
-    private static final NumberFormat VND_FORMAT = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+
+    private static final NumberFormat VND_FORMAT = NumberFormat.getCurrencyInstance(Locale.of("vi", "VN"));
 
     public static String formatVND(double amount) {
         return VND_FORMAT.format(amount);

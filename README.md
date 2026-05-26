@@ -1,58 +1,34 @@
-# 🍜 Quản Lý Quán Mì Cay - TVT
+## 🚀 Quick Start
 
-## 📌 Giới thiệu
-Phần mềm quản lý quán mì cay bằng **Java Swing** và **MySQL**.
+1. **Clone & Setup**: Xem file `SETUP.md` để hướng dẫn chi tiết
+2. **Default Accounts**: Xem phần "🔑 Tài khoản mặc định"
+3. **Database**: File `database/quanly_quan_mi_cay.sql`
 
-**Branch:** `Update-New`
-
----
-
-## ✨ Tính năng
-
-| Tính năng | Mô tả |
-|-----------|-------|
-| Đăng nhập | Admin và nhân viên, phân quyền |
-| Sơ đồ bàn | 8 bàn, trạng thái Trống/Đang phục vụ |
-| Menu gọi món | Dạng lưới 2 cột, ảnh, spinner số lượng |
-| Thanh toán | Tiền mặt / Chuyển khoản + mã QR |
-| In hóa đơn | Xuất PDF, hiển thị nhân viên |
-| Thống kê | Doanh thu, top món bán chạy |
-| Quản lý | CRUD món ăn, nhân viên (admin) |
+## 📂 Cấu trúc Dự án
 
 ---
 
-## 🛠️ Công nghệ
-- Java Swing
-- MySQL
-- iTextPDF (xuất PDF)
-- ZXing (tạo QR)
+## 🚀 Quick Start
 
----
+1. Copy sample config and edit if needed:
 
-## 📦 Thư viện cần tải
+```bash
+copy QuanLyQuanMiCay\src\config.properties.example QuanLyQuanMiCay\src\config.properties
+```
 
-| Thư viện | Link |
-|----------|------|
-| MySQL Connector | [Tải](https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.7.0/mysql-connector-j-9.7.0.jar) |
-| iTextPDF | [Tải](https://repo1.maven.org/maven2/com/itextpdf/itextpdf/5.5.13.3/itextpdf-5.5.13.3.jar) |
-| ZXing Core | [Tải](https://repo1.maven.org/maven2/com/google/zxing/core/3.5.3/core-3.5.3.jar) |
-| ZXing JavaSE | [Tải](https://repo1.maven.org/maven2/com/google/zxing/javase/3.5.3/javase-3.5.3.jar) |
+2. Import database:
 
----
+```bash
+mysql -u root -p < QuanLyQuanMiCay\database\quanly_quan_mi_cay.sql
+```
 
-## 🔑 Tài khoản mặc định
+3. Open `QuanLyQuanMiCay` in Eclipse/IntelliJ, ensure `lib/` jars are added to Project Build Path.
 
-| Tài khoản | Mật khẩu | Vai trò |
-|-----------|----------|---------|
-| admin | 123456 | Quản trị viên |
-| nhanvien1 | 123456 | Nhân viên |
+4. Run `src/app/Main.java`.
 
----
+If you need custom DB credentials, edit `QuanLyQuanMiCay/src/config.properties`.
 
-## 📝 Cập nhật (24/05/2026)
-- ✅ Ảnh món ăn + spinner số lượng
-- ✅ Thanh toán chuyển khoản + mã QR
-- ✅ Xuất hóa đơn PDF
-- ✅ Sửa lỗi kết nối DB
+Sửa đổi `src/config.properties` nếu:
 
-**Tác giả:** Nguyễn Quốc Thắng
+- MySQL chạy trên host/port khác
+- Username/password DB khác
