@@ -47,7 +47,7 @@ public class ThongKePanel extends JPanel {
         spnNgay.setFont(UiTheme.bold(13));
         topPanel.add(spnNgay);
 
-        JButton btnXem = new JButton("Xem thống kê");
+        JButton btnXem = new JButton("Tải lại");
         UiTheme.primaryButton(btnXem);
         btnXem.addActionListener(e -> {
             Date ngay = (Date) spnNgay.getValue();
@@ -67,7 +67,8 @@ public class ThongKePanel extends JPanel {
         gbc.insets = new Insets(15, 15, 15, 15);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         JLabel lblDtTitle = new JLabel("Doanh thu:");
         UiTheme.label(lblDtTitle);
         infoPanel.add(lblDtTitle, gbc);
@@ -76,7 +77,8 @@ public class ThongKePanel extends JPanel {
         gbc.gridx = 1;
         infoPanel.add(lblDoanhThu, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         JLabel lblHdTitle = new JLabel("Số hóa đơn:");
         UiTheme.label(lblHdTitle);
         infoPanel.add(lblHdTitle, gbc);
@@ -86,7 +88,8 @@ public class ThongKePanel extends JPanel {
         gbc.gridx = 1;
         infoPanel.add(lblSoHoaDon, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
         JLabel lblMonTitle = new JLabel("Tổng món bán:");
         UiTheme.label(lblMonTitle);
         infoPanel.add(lblMonTitle, gbc);

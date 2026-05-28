@@ -1,7 +1,5 @@
 package view.frame;
 
-
-
 import model.NhanVien;
 
 import util.UiTheme;
@@ -18,13 +16,9 @@ import view.panel.QuanLyNhanVienPanel;
 
 import view.panel.ThongKePanel;
 
-
-
 import javax.swing.*;
 
 import java.awt.*;
-
-
 
 public class MainFrame extends JFrame {
 
@@ -48,8 +42,6 @@ public class MainFrame extends JFrame {
 
     private JTabbedPane quanLyTabbedPane;
 
-
-
     public MainFrame(NhanVien nhanVien) {
 
         this.nhanVien = nhanVien;
@@ -62,8 +54,6 @@ public class MainFrame extends JFrame {
 
     }
 
-
-
     private void initUI() {
 
         setTitle("TVT - QUẢN LÝ QUÁN MÌ CAY - Chào " + nhanVien.getTen());
@@ -72,19 +62,13 @@ public class MainFrame extends JFrame {
 
         getContentPane().setBackground(UiTheme.DARK);
 
-
-
         JMenuBar menuBar = new JMenuBar();
 
         UiTheme.menuBar(menuBar);
 
-
-
         JMenu menuHeThong = new JMenu("Hệ thống");
 
         UiTheme.topMenu(menuHeThong);
-
-
 
         JMenuItem menuDangXuat = new JMenuItem("Đăng xuất");
 
@@ -100,13 +84,9 @@ public class MainFrame extends JFrame {
 
         menuBar.add(menuHeThong);
 
-
-
         JMenu menuTroGiup = new JMenu("Trợ giúp");
 
         UiTheme.topMenu(menuTroGiup);
-
-
 
         JMenuItem menuThongTin = new JMenuItem("Thông tin");
 
@@ -116,11 +96,7 @@ public class MainFrame extends JFrame {
 
         menuBar.add(menuTroGiup);
 
-
-
         setJMenuBar(menuBar);
-
-
 
         tabbedPane = new JTabbedPane();
 
@@ -130,39 +106,29 @@ public class MainFrame extends JFrame {
 
         tabbedPane.setFont(UiTheme.bold(13));
 
-
-
         banPanel = new BanPanel(this);
 
         tabbedPane.addTab(UiTheme.tabTitle("Sơ đồ bàn"), banPanel);
 
-
-
-        goiMonPanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        goiMonPanel = new JPanel(new BorderLayout(12, 0));
 
         hoaDonPanel = new HoaDonPanel(this);
 
         menuPanel = new MenuPanel(hoaDonPanel);
 
-        goiMonPanel.add(menuPanel);
+        goiMonPanel.add(menuPanel, BorderLayout.CENTER);
 
-        goiMonPanel.add(hoaDonPanel);
+        goiMonPanel.add(hoaDonPanel, BorderLayout.EAST);
 
         UiTheme.panel(goiMonPanel);
 
         tabbedPane.addTab(UiTheme.tabTitle("Gọi món"), goiMonPanel);
 
-
-
         thongKePanel = new ThongKePanel();
 
         tabbedPane.addTab(UiTheme.tabTitle("Thống kê"), thongKePanel);
 
-
-
         tabbedPane.addChangeListener(e -> onMainTabChanged());
-
-
 
         if (nhanVien.getVaiTro().equals("admin")) {
 
@@ -174,35 +140,23 @@ public class MainFrame extends JFrame {
 
             quanLyTabbedPane.setFont(UiTheme.bold(13));
 
-
-
             quanLyMenuPanel = new QuanLyMenuPanel(() -> menuPanel.refreshMenu());
 
             quanLyTabbedPane.addTab(UiTheme.adminTabTitle("Quản lý Menu"), quanLyMenuPanel);
-
-
 
             quanLyNhanVienPanel = new QuanLyNhanVienPanel();
 
             quanLyTabbedPane.addTab(UiTheme.adminTabTitle("Quản lý Nhân viên"), quanLyNhanVienPanel);
 
-
-
             quanLyTabbedPane.addChangeListener(e -> onQuanLySubTabChanged());
-
-
 
             tabbedPane.addTab(UiTheme.tabTitle("Quản lý"), quanLyTabbedPane);
 
         }
 
-
-
         add(tabbedPane);
 
     }
-
-
 
     private void onMainTabChanged() {
 
@@ -223,8 +177,6 @@ public class MainFrame extends JFrame {
         }
 
     }
-
-
 
     private void onQuanLySubTabChanged() {
 
@@ -248,11 +200,7 @@ public class MainFrame extends JFrame {
 
     }
 
-
-
     public void chonBan(int soBan) {
-
-        menuPanel.setCurrentBan(soBan);
 
         hoaDonPanel.setCurrentBan(soBan, nhanVien.getId());
 
@@ -260,15 +208,11 @@ public class MainFrame extends JFrame {
 
     }
 
-
-
     public void refreshBanPanel() {
 
         banPanel.refresh();
 
     }
-
-
 
     private void dangXuat() {
 
@@ -286,8 +230,6 @@ public class MainFrame extends JFrame {
 
     }
 
-
-
     private void thongTin() {
 
         JOptionPane.showMessageDialog(this,
@@ -297,11 +239,10 @@ public class MainFrame extends JFrame {
                 "Thông tin", JOptionPane.INFORMATION_MESSAGE);
 
     }
- // Thêm method này vào cuối class, trước dấu đóng ngoặc nhọn cuối cùng
+
+    // Thêm method này vào cuối class, trước dấu đóng ngoặc nhọn cuối cùng
     public NhanVien getNhanVien() {
         return this.nhanVien;
     }
 
 }
-
-

@@ -1,5 +1,4 @@
 package app;
-
 import javax.swing.SwingUtilities;
 import util.UiTheme;
 import view.frame.LoginFrame;

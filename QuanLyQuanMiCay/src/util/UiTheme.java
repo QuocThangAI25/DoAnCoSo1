@@ -12,16 +12,18 @@ public final class UiTheme {
     public static final Color RED = new Color(220, 20, 45);
     public static final Color RED_DARK = new Color(120, 0, 0);
     public static final Color RED_GLOW = new Color(255, 45, 55);
+    public static final Color RED_LIGHT = new Color(255, 100, 100);
     public static final Color WHITE = Color.WHITE;
     public static final Color TEXT = new Color(245, 245, 245);
     public static final Color MUTED = new Color(160, 160, 160);
 
     private static final String FONT = resolveFontFamily();
 
-    private UiTheme() {}
+    private UiTheme() {
+    }
 
     private static String resolveFontFamily() {
-        String[] preferred = {"Segoe UI", "Arial", "SansSerif"};
+        String[] preferred = { "Segoe UI", "Arial", "SansSerif" };
         String[] available = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
         for (String name : preferred) {
             for (String a : available) {
@@ -212,5 +214,95 @@ public final class UiTheme {
     public static void scrollPane(JScrollPane sp) {
         sp.getViewport().setBackground(DARK);
         sp.setBorder(BorderFactory.createLineBorder(RED_DARK, 1));
+    }
+
+    public static void menuScrollPane(JScrollPane sp) {
+        sp.setBorder(BorderFactory.createEmptyBorder());
+        sp.getViewport().setBackground(DARK);
+        sp.setBackground(DARK);
+    }
+
+    public static void sectionHeader(JLabel lbl, String title) {
+        lbl.setText(title);
+        lbl.setFont(bold(15));
+        lbl.setForeground(RED);
+        lbl.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+        lbl.setOpaque(false);
+    }
+
+    public static void menuTabbedPane(JTabbedPane tabs) {
+        tabs.setBackground(DARK);
+        tabs.setForeground(TEXT);
+        tabs.setFont(bold(12));
+        tabs.setBorder(BorderFactory.createEmptyBorder(0, 8, 8, 8));
+    }
+
+    public static void qtyButton(JButton btn) {
+        btn.setFont(bold(14));
+        btn.setBackground(CARD);
+        btn.setForeground(TEXT);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createLineBorder(RED_DARK, 1));
+        btn.setPreferredSize(new Dimension(28, 28));
+        btn.setMinimumSize(new Dimension(28, 28));
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setOpaque(true);
+    }
+
+    public static void addToOrderButton(JButton btn) {
+        btn.setText("Thêm vào đơn");
+        btn.setFont(bold(11));
+        primaryButton(btn);
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 4, 8, 4));
+    }
+
+    public static void invoicePanel(JPanel panel) {
+        panel.setBackground(PANEL);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(RED_DARK, 1),
+                BorderFactory.createEmptyBorder(0, 0, 0, 0)));
+        panel.setOpaque(true);
+    }
+
+    public static JPanel roundedCard(int arc) {
+        final int radius = arc;
+        JPanel p = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(CARD);
+                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, radius, radius);
+                g2.setColor(RED_DARK);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, radius, radius);
+                g2.dispose();
+            }
+        };
+        p.setOpaque(false);
+        p.setBackground(CARD);
+        return p;
+    }
+
+    public static JLabel roundedImageLabel(ImageIcon icon, int maxW, int maxH, int arc) {
+        int w = icon.getIconWidth();
+        int h = icon.getIconHeight();
+        double scale = (w > 0 && h > 0) ? Math.min((double) maxW / w, (double) maxH / h) : 1;
+        int nw = Math.max(1, (int) Math.round(w * scale));
+        int nh = Math.max(1, (int) Math.round(h * scale));
+        Image scaled = icon.getImage().getScaledInstance(nw, nh, Image.SCALE_SMOOTH);
+        ImageIcon fitted = new ImageIcon(scaled);
+        return new JLabel(fitted, SwingConstants.CENTER) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int x = (getWidth() - fitted.getIconWidth()) / 2;
+                int y = (getHeight() - fitted.getIconHeight()) / 2;
+                g2.setClip(new java.awt.geom.RoundRectangle2D.Float(
+                        x, y, fitted.getIconWidth(), fitted.getIconHeight(), arc, arc));
+                g2.drawImage(fitted.getImage(), x, y, null);
+                g2.dispose();
+            }
+        };
     }
 }
