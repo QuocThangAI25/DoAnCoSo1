@@ -30,6 +30,9 @@ public class HoaDonPanel extends JPanel {
     private int currentBan = -1;
     private int nhanVienId = -1;
 
+    // Biến để nhớ mã Voucher khách đang dùng tạm
+    private String appliedVoucherCode = null;
+
     public HoaDonPanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
         initUI();
@@ -117,7 +120,7 @@ public class HoaDonPanel extends JPanel {
 
         JPanel giamGiaPanel = new JPanel(new BorderLayout(6, 0));
         giamGiaPanel.setOpaque(false);
-        txtGiamGia = new JTextField("0", 8);
+        txtGiamGia = new JTextField("", 8);
         txtGiamGia.setFont(UiTheme.plain(13));
         txtGiamGia.setBackground(UiTheme.PANEL);
         txtGiamGia.setForeground(UiTheme.TEXT);
@@ -125,11 +128,14 @@ public class HoaDonPanel extends JPanel {
         txtGiamGia.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UiTheme.RED_DARK, 1),
                 BorderFactory.createEmptyBorder(6, 8, 6, 8)));
+
         JButton btnApGiam = new JButton("Áp dụng");
         UiTheme.primaryButton(btnApGiam);
         btnApGiam.setFont(UiTheme.bold(11));
         btnApGiam.setPreferredSize(new Dimension(80, 32));
-        btnApGiam.addActionListener(e -> apGiamGia());
+        // ĐÃ SỬA: Trỏ sự kiện về hàm xử lý Voucher mới
+        btnApGiam.addActionListener(e -> apDungMaGiamGia());
+
         giamGiaPanel.add(txtGiamGia, BorderLayout.CENTER);
         giamGiaPanel.add(btnApGiam, BorderLayout.EAST);
         gbc.gridx = 1;
@@ -155,7 +161,6 @@ public class HoaDonPanel extends JPanel {
 
         bottomWrap.add(summaryPanel, BorderLayout.CENTER);
 
-        // Chỉ giữ lại một nút THANH TOÁN
         JPanel btnPanel = new JPanel();
         btnPanel.setLayout(new BoxLayout(btnPanel, BoxLayout.Y_AXIS));
         btnPanel.setOpaque(false);
@@ -168,7 +173,16 @@ public class HoaDonPanel extends JPanel {
         btnThanhToan.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnThanhToan.addActionListener(e -> thanhToan());
 
+        JButton btnHuyBan = new JButton("HỦY BÀN");
+        UiTheme.outlineButton(btnHuyBan);
+        btnHuyBan.setFont(UiTheme.bold(14));
+        btnHuyBan.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+        btnHuyBan.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnHuyBan.addActionListener(e -> huyBanChon());
+
         btnPanel.add(btnThanhToan);
+        btnPanel.add(Box.createVerticalStrut(8));
+        btnPanel.add(btnHuyBan);
 
         bottomWrap.add(btnPanel, BorderLayout.SOUTH);
         add(bottomWrap, BorderLayout.SOUTH);
@@ -222,7 +236,6 @@ public class HoaDonPanel extends JPanel {
             @Override
             public Component getTableCellRendererComponent(JTable t, Object value, boolean isSelected,
                     boolean hasFocus, int row, int column) {
-                // Bỏ qua value gốc (ID DB), thay bằng số thứ tự (row + 1)
                 Component c = super.getTableCellRendererComponent(t, String.valueOf(row + 1), isSelected, hasFocus, row,
                         column);
                 if (!isSelected) {
@@ -235,19 +248,14 @@ public class HoaDonPanel extends JPanel {
         };
         table.getColumnModel().getColumn(0).setCellRenderer(sttRenderer);
 
-        // Cột STT
         table.getColumnModel().getColumn(0).setMinWidth(35);
         table.getColumnModel().getColumn(0).setMaxWidth(35);
-        // Cột Số lượng
         table.getColumnModel().getColumn(2).setMinWidth(55);
         table.getColumnModel().getColumn(2).setMaxWidth(55);
-        // Cột Đơn giá
         table.getColumnModel().getColumn(3).setMinWidth(75);
         table.getColumnModel().getColumn(3).setMaxWidth(75);
-        // Cột Thành tiền
         table.getColumnModel().getColumn(4).setMinWidth(85);
         table.getColumnModel().getColumn(4).setMaxWidth(85);
-        // Cột 5: Nút XÓA
         table.getColumnModel().getColumn(5).setMinWidth(35);
         table.getColumnModel().getColumn(5).setMaxWidth(35);
 
@@ -257,8 +265,8 @@ public class HoaDonPanel extends JPanel {
                     boolean hasFocus, int row, int column) {
                 JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row,
                         column);
-                lbl.setBackground(UiTheme.PANEL); // Đồng bộ màu nền với Header
-                lbl.setBorder(BorderFactory.createEmptyBorder()); // Xóa sạch viền (bóp mất ô vuông)
+                lbl.setBackground(UiTheme.PANEL);
+                lbl.setBorder(BorderFactory.createEmptyBorder());
                 return lbl;
             }
         };
@@ -316,15 +324,41 @@ public class HoaDonPanel extends JPanel {
         qtyColumn.setCellEditor(editor);
     }
 
-    private void apGiamGia() {
-        if (currentHoaDonId != -1) {
-            try {
-                double giamGia = NumberUtils.parseVND(txtGiamGia.getText());
-                ThanhToanService.capNhatGiamGia(currentHoaDonId, giamGia);
-                loadHoaDon(currentHoaDonId);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Vui lòng nhập số tiền giảm giá hợp lệ!");
-            }
+    private void apDungMaGiamGia() {
+        if (currentHoaDonId == -1) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn bàn và gọi món trước khi nhập mã!", "Lỗi",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String maVoucher = txtGiamGia.getText().trim().toUpperCase();
+
+        // Nếu xóa trắng ô -> Hủy giảm giá
+        if (maVoucher.isEmpty() || maVoucher.equals("0")) {
+            ThanhToanService.capNhatTienGiamGia(currentHoaDonId, 0);
+            appliedVoucherCode = null;
+            loadHoaDon(currentHoaDonId); // Tải lại để tính lại tiền
+            return;
+        }
+
+        // Kiểm tra mã trong CSDL
+        int mucGiam = ThanhToanService.kiemTraVoucher(maVoucher);
+        if (mucGiam != -1) {
+            // Mã Hợp lệ -> Tính tiền giảm
+            model.HoaDon hd = ThanhToanService.getHoaDon(currentHoaDonId);
+            double tienGiam = hd.getTongTien() * ((double) mucGiam / 100.0);
+
+            ThanhToanService.capNhatTienGiamGia(currentHoaDonId, tienGiam);
+            appliedVoucherCode = maVoucher;
+
+            JOptionPane.showMessageDialog(this, "🎉 Áp dụng mã thành công!\nHóa đơn được giảm " + mucGiam + "%",
+                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            loadHoaDon(currentHoaDonId);
+        } else {
+            // Mã sai
+            JOptionPane.showMessageDialog(this, "❌ Mã Voucher không tồn tại hoặc đã được sử dụng!", "Lỗi Voucher",
+                    JOptionPane.ERROR_MESSAGE);
+            txtGiamGia.setText("");
         }
     }
 
@@ -395,12 +429,13 @@ public class HoaDonPanel extends JPanel {
             }
 
             String phuongThuc = rbTienMat.isSelected() ? "TIỀN MẶT" : "CHUYỂN KHOẢN";
-            HoaDon hoaDon = ThanhToanService.getHoaDon(currentHoaDonId);
+            model.HoaDon hoaDon = ThanhToanService.getHoaDon(currentHoaDonId);
             double tongTien = hoaDon.getThanhTien();
 
             if (phuongThuc.equals("CHUYỂN KHOẢN")) {
                 String maHoaDon = "HD" + currentHoaDonId;
-                ChuyenKhoanDialog qrDialog = new ChuyenKhoanDialog(mainFrame, tongTien, maHoaDon);
+                view.dialog.ChuyenKhoanDialog qrDialog = new view.dialog.ChuyenKhoanDialog(mainFrame, tongTien,
+                        maHoaDon);
                 qrDialog.setVisible(true);
 
                 int confirm = JOptionPane.showConfirmDialog(this,
@@ -422,14 +457,32 @@ public class HoaDonPanel extends JPanel {
                     JOptionPane.INFORMATION_MESSAGE);
 
             if (confirm == JOptionPane.YES_OPTION) {
-                // Xử lý logic thanh toán
+                // Xử lý logic thanh toán vào DB
                 ThanhToanService.thanhToan(currentHoaDonId);
                 QuanLyBanService.updateTrangThaiBan(currentBan, "Trống", -1);
 
-                hoaDon = ThanhToanService.getHoaDon(currentHoaDonId);
-                List<ChiTietHoaDon> chiTietList = ThanhToanService.getChiTietHoaDon(currentHoaDonId);
+                // 🟢 ĐỐT MÃ VOUCHER: Chuyển trạng thái mã thành Đã sử dụng sau khi thanh toán
+                // xong
+                if (appliedVoucherCode != null) {
+                    ThanhToanService.chotVoucher(appliedVoucherCode);
+                    appliedVoucherCode = null;
+                    txtGiamGia.setText("");
+                }
 
-                // Thông báo thành công
+                hoaDon = ThanhToanService.getHoaDon(currentHoaDonId);
+                List<model.ChiTietHoaDon> chiTietList = ThanhToanService.getChiTietHoaDon(currentHoaDonId);
+
+                // 🟢 THUẬT TOÁN SINH VOUCHER MỚI (Chỉ ngầm sinh mã trong DB, chưa hiện popup
+                // vội)
+                String maVoucher = null;
+                String qrUrl = null;
+                if (tongTien >= 1000000) {
+                    maVoucher = taoMaVoucherNgauNhien();
+                    luuVoucherVaoDB(maVoucher);
+                    qrUrl = "https://quickchart.io/qr?text=" + maVoucher + "&size=150";
+                }
+
+                // 1️⃣ BẬT POPUP THANH TOÁN THÀNH CÔNG LÊN TRƯỚC
                 JOptionPane.showMessageDialog(this,
                         String.format(
                                 "THANH TOÁN THÀNH CÔNG!\n\nPhương thức: %s\nTổng tiền: %s\nNhân viên: %s",
@@ -437,12 +490,25 @@ public class HoaDonPanel extends JPanel {
                         "Thành công",
                         JOptionPane.INFORMATION_MESSAGE);
 
+                // 2️⃣ SAU KHI TẮT POPUP THÀNH CÔNG, BẬT POPUP TẶNG VOUCHER (Nếu có)
+                if (maVoucher != null) {
+                    JOptionPane.showMessageDialog(this,
+                            "🎉 ĐƠN HÀNG ĐẠT MỐC 1 TRIỆU!\nKhách hàng được tặng Voucher giảm 10% cho lần sau.\nMã: "
+                                    + maVoucher,
+                            "Tặng Voucher", JOptionPane.WARNING_MESSAGE);
+                }
+
                 // Gọi giao diện Xem trước Hóa Đơn
-                InvoicePreviewDialog previewDialog = new InvoicePreviewDialog(mainFrame, hoaDon, chiTietList,
-                        phuongThuc);
+                view.dialog.InvoicePreviewDialog previewDialog = new view.dialog.InvoicePreviewDialog(mainFrame, hoaDon,
+                        chiTietList, phuongThuc);
+
+                if (maVoucher != null) {
+                    previewDialog.setVoucherInfo(maVoucher, qrUrl);
+                }
+
                 previewDialog.setVisible(true);
 
-                // Sau khi tắt giao diện xem trước (In hoặc Hủy xong), dọn dẹp bàn
+                // Dọn dẹp bàn
                 mainFrame.refreshBanPanel();
                 clearHoaDon();
                 currentBan = -1;
@@ -450,6 +516,62 @@ public class HoaDonPanel extends JPanel {
             }
         } else {
             JOptionPane.showMessageDialog(this, "Không có hóa đơn nào để thanh toán!");
+        }
+    }
+
+    private String taoMaVoucherNgauNhien() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder sb = new StringBuilder("TVT-");
+        java.util.Random rnd = new java.util.Random();
+        for (int i = 0; i < 6; i++) {
+            sb.append(chars.charAt(rnd.nextInt(chars.length())));
+        }
+        return sb.toString();
+    }
+
+    private void luuVoucherVaoDB(String maVoucher) {
+        String sql = "INSERT INTO voucher (ma_voucher, muc_giam, trang_thai) VALUES (?, 10, 'Chưa sử dụng')";
+        try (java.sql.Connection conn = config.DBConnection.getConnection();
+                java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maVoucher);
+            ps.executeUpdate();
+            System.out.println("✅ Đã lưu Voucher " + maVoucher + " vào CSDL.");
+        } catch (Exception e) {
+            System.err.println("❌ Lỗi lưu Voucher: " + e.getMessage());
+        }
+    }
+
+    private void huyBanChon() {
+        if (currentHoaDonId == -1 || currentBan == -1) {
+            JOptionPane.showMessageDialog(this, "Chưa chọn bàn nào để hủy!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "⚠️ BẠN CÓ CHẮC CHẮN MUỐN HỦY BÀN NÀY?\n\n"
+                        + "Hành động này sẽ xóa toàn bộ các món ăn khách đã gọi\n"
+                        + "và trả bàn về trạng thái TRỐNG.",
+                "Xác nhận Hủy Bàn",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.ERROR_MESSAGE);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                ThanhToanService.xoaHoaDon(currentHoaDonId);
+                QuanLyBanService.updateTrangThaiBan(currentBan, "Trống", -1);
+
+                JOptionPane.showMessageDialog(this, "Đã hủy bàn thành công!", "Thông báo",
+                        JOptionPane.INFORMATION_MESSAGE);
+
+                clearHoaDon();
+                mainFrame.refreshBanPanel();
+                mainFrame.quayLaiSoDoBan();
+
+                currentBan = -1;
+                currentHoaDonId = -1;
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi hủy bàn: " + ex.getMessage());
+            }
         }
     }
 
@@ -463,6 +585,9 @@ public class HoaDonPanel extends JPanel {
             QuanLyBanService.updateTrangThaiBan(ban, "Đang phục vụ", hoaDon.getId());
             mainFrame.refreshBanPanel();
         }
+
+        // Reset mã khi chuyển sang bàn mới
+        this.appliedVoucherCode = null;
         loadHoaDon(hoaDon.getId());
     }
 
@@ -487,16 +612,24 @@ public class HoaDonPanel extends JPanel {
         }
 
         lblTamTinh.setText(NumberUtils.formatVND(hoaDon.getTongTien()));
-        txtGiamGia.setText(String.valueOf((int) hoaDon.getGiamGia()));
+
+        // Cập nhật ô nhập để nó không đè mất mã chữ (VD: TVT-XYZ) thành số
+        if (appliedVoucherCode != null) {
+            txtGiamGia.setText(appliedVoucherCode);
+        } else {
+            txtGiamGia.setText(hoaDon.getGiamGia() > 0 ? String.valueOf((int) hoaDon.getGiamGia()) : "");
+        }
+
         lblTongCong.setText(NumberUtils.formatVND(hoaDon.getThanhTien()));
     }
 
     private void clearHoaDon() {
         tableModel.setRowCount(0);
         lblTamTinh.setText("0 ₫");
-        txtGiamGia.setText("0");
+        txtGiamGia.setText("");
         lblTongCong.setText("0 ₫");
         currentHoaDonId = -1;
+        appliedVoucherCode = null;
     }
 
     public int getCurrentHoaDonId() {

@@ -37,7 +37,7 @@ public class QuanLyMenuPanel extends JPanel {
         UiTheme.panel(this);
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        String[] columns = {"ID", "Tên món", "Loại", "Cấp độ", "Giá", "Trạng thái"};
+        String[] columns = { "ID", "Tên món", "Loại", "Cấp độ", "Giá", "Trạng thái" };
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -58,7 +58,8 @@ public class QuanLyMenuPanel extends JPanel {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         JLabel lblTen = new JLabel("Tên món:");
         UiTheme.label(lblTen);
         inputPanel.add(lblTen, gbc);
@@ -67,23 +68,41 @@ public class QuanLyMenuPanel extends JPanel {
         gbc.gridx = 1;
         inputPanel.add(txtTen, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         JLabel lblLoai = new JLabel("Loại:");
         UiTheme.label(lblLoai);
         inputPanel.add(lblLoai, gbc);
-        cbLoai = new JComboBox<>(new String[]{"Mi Cay", "Nuoc Uong", "Topping"});
+        cbLoai = new JComboBox<>(new String[] { "Mi Cay", "Nuoc Uong", "Topping" });
         gbc.gridx = 1;
         inputPanel.add(cbLoai, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
         JLabel lblCapDo = new JLabel("Cấp độ cay:");
         UiTheme.label(lblCapDo);
         inputPanel.add(lblCapDo, gbc);
-        cbCapDo = new JComboBox<>(new String[]{"0 (Không cay)", "3", "5", "7 (Đặc biệt)", "10 (Siêu cay)", "Không áp dụng"});
+        cbCapDo = new JComboBox<>(
+                new String[] { "0 (Không cay)", "3", "5", "7 (Đặc biệt)", "10 (Siêu cay)", "Không áp dụng" });
         gbc.gridx = 1;
         inputPanel.add(cbCapDo, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 3;
+        // 🟢 Tính năng tự động khóa Cấp độ cay
+        cbLoai.addActionListener(e -> {
+            String selectedLoai = (String) cbLoai.getSelectedItem();
+            if ("Nuoc Uong".equals(selectedLoai) || "Topping".equals(selectedLoai)) {
+                cbCapDo.setSelectedItem("Không áp dụng");
+                cbCapDo.setEnabled(false);
+            } else {
+                cbCapDo.setEnabled(true);
+                if ("Không áp dụng".equals(cbCapDo.getSelectedItem())) {
+                    cbCapDo.setSelectedIndex(0);
+                }
+            }
+        });
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
         JLabel lblGia = new JLabel("Giá:");
         UiTheme.label(lblGia);
         inputPanel.add(lblGia, gbc);
@@ -92,22 +111,33 @@ public class QuanLyMenuPanel extends JPanel {
         gbc.gridx = 1;
         inputPanel.add(txtGia, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 4;
+        gbc.gridx = 0;
+        gbc.gridy = 4;
         JLabel lblTt = new JLabel("Trạng thái:");
         UiTheme.label(lblTt);
         inputPanel.add(lblTt, gbc);
-        cbTrangThai = new JComboBox<>(new String[]{"Đang bán", "Ngừng bán"});
+        cbTrangThai = new JComboBox<>(new String[] { "Đang bán", "Ngừng bán" });
         gbc.gridx = 1;
         inputPanel.add(cbTrangThai, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 5;
+        gbc.gridx = 0;
+        gbc.gridy = 5;
         gbc.gridwidth = 2;
-        JPanel btnPanel = new JPanel(new FlowLayout());
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         UiTheme.panel(btnPanel);
+
         JButton btnThem = new JButton("Thêm");
         JButton btnSua = new JButton("Sửa");
         JButton btnXoa = new JButton("Xóa");
         JButton btnLamMoi = new JButton("Làm mới");
+
+        // 🟢 Cố định 4 nút bằng nhau
+        Dimension btnSize = new Dimension(90, 35);
+        btnThem.setPreferredSize(btnSize);
+        btnSua.setPreferredSize(btnSize);
+        btnXoa.setPreferredSize(btnSize);
+        btnLamMoi.setPreferredSize(btnSize);
+
         UiTheme.primaryButton(btnThem);
         UiTheme.outlineButton(btnSua);
         UiTheme.ghostButton(btnXoa);
@@ -160,25 +190,35 @@ public class QuanLyMenuPanel extends JPanel {
             String capDo = getCapDoString(mon.getCapDoCay());
             String gia = NumberUtils.formatVND(mon.getGia());
             String trangThai = mon.isConBan() ? "Đang bán" : "Ngừng bán";
-            tableModel.addRow(new Object[]{mon.getId(), mon.getTen(), mon.getLoai(), capDo, gia, trangThai});
+            tableModel.addRow(new Object[] { mon.getId(), mon.getTen(), mon.getLoai(), capDo, gia, trangThai });
         }
     }
 
     private String getCapDoString(int capDo) {
-        if (capDo == -1) return "Không áp dụng";
-        if (capDo == 0) return "0 (Không cay)";
-        if (capDo == 7) return "7 (Đặc biệt)";
-        if (capDo == 10) return "10 (Siêu cay)";
+        if (capDo == -1)
+            return "Không áp dụng";
+        if (capDo == 0)
+            return "0 (Không cay)";
+        if (capDo == 7)
+            return "7 (Đặc biệt)";
+        if (capDo == 10)
+            return "10 (Siêu cay)";
         return String.valueOf(capDo);
     }
 
     private int getCapDoValue(String capDoStr) {
-        if (capDoStr.contains("Không áp dụng")) return -1;
-        if (capDoStr.contains("10")) return 10;
-        if (capDoStr.contains("7")) return 7;
-        if (capDoStr.contains("5")) return 5;
-        if (capDoStr.contains("3")) return 3;
-        if (capDoStr.contains("0")) return 0;
+        if (capDoStr.contains("Không áp dụng"))
+            return -1;
+        if (capDoStr.contains("10"))
+            return 10;
+        if (capDoStr.contains("7"))
+            return 7;
+        if (capDoStr.contains("5"))
+            return 5;
+        if (capDoStr.contains("3"))
+            return 3;
+        if (capDoStr.contains("0"))
+            return 0;
         return -1;
     }
 
@@ -237,7 +277,8 @@ public class QuanLyMenuPanel extends JPanel {
             return;
         }
 
-        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa món này?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa món này?", "Xác nhận",
+                JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             int id = (int) tableModel.getValueAt(row, 0);
             monService.xoa(id);
@@ -258,6 +299,7 @@ public class QuanLyMenuPanel extends JPanel {
         txtTen.setText("");
         cbLoai.setSelectedIndex(0);
         cbCapDo.setSelectedIndex(0);
+        cbCapDo.setEnabled(true); // Nhớ mở khóa lại ô Cấp độ khi bấm Làm mới
         txtGia.setText("");
         cbTrangThai.setSelectedIndex(0);
         table.clearSelection();

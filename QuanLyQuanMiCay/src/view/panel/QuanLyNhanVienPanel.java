@@ -4,6 +4,8 @@ import model.NhanVien;
 import service.NhanVienService;
 import util.UiTheme;
 
+import view.dialog.CapNhatMatKhauDialog;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -102,10 +104,12 @@ public class QuanLyNhanVienPanel extends JPanel {
         JButton btnSua = new JButton("Cập nhật");
         JButton btnXoa = new JButton("Xóa");
         JButton btnLamMoi = new JButton("Làm mới");
+        JButton btnResetMk = new JButton("Reset mật khẩu");
         UiTheme.primaryButton(btnThem);
         UiTheme.outlineButton(btnSua);
         UiTheme.ghostButton(btnXoa);
         UiTheme.ghostButton(btnLamMoi);
+        UiTheme.ghostButton(btnResetMk);
 
         btnThem.addActionListener(e -> themNhanVien());
         btnSua.addActionListener(e -> suaNhanVien());
@@ -116,6 +120,7 @@ public class QuanLyNhanVienPanel extends JPanel {
         btnPanel.add(btnSua);
         btnPanel.add(btnXoa);
         btnPanel.add(btnLamMoi);
+        btnPanel.add(btnResetMk);
         inputPanel.add(btnPanel, gbc);
 
         add(inputPanel, BorderLayout.SOUTH);
@@ -130,6 +135,26 @@ public class QuanLyNhanVienPanel extends JPanel {
                     cbTrangThai.setSelectedItem(tableModel.getValueAt(row, 4).toString());
                     txtMatKhau.setText("");
                 }
+            }
+        });
+
+        // Reset mật khẩu về mặc định
+        btnResetMk.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row < 0) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên cần reset mật khẩu!");
+                return;
+            }
+            int id = (int) tableModel.getValueAt(row, 0);
+            String ten = tableModel.getValueAt(row, 1).toString();
+            int confirm = JOptionPane.showConfirmDialog(this,
+                "Bạn có chắc muốn reset mật khẩu của " + ten + " về mặc định?",
+                "Xác nhận reset",
+                JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                nhanVienService.resetMatKhau(id);
+                loadData();
+                JOptionPane.showMessageDialog(this, "Reset mật khẩu thành công! Mật khẩu mặc định là 123456");
             }
         });
     }

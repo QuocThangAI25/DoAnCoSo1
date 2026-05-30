@@ -35,4 +35,13 @@ public class NhanVienService {
     public void xoa(int id) {
         dao.delete(id);
     }
+
+    public boolean xacThucMatKhau(String taiKhoan, String matKhauCu) {
+        // Gọi lại hàm dangNhap đã có sẵn để check mật khẩu cũ
+        return dangNhap(taiKhoan, matKhauCu) != null;
+    }
+
+    public void resetMatKhau(int id) {
+        dao.updatePassword(id, "123456"); // Reset về 123456
+    }
 }

@@ -19,6 +19,11 @@ public class InvoicePreviewDialog extends JDialog {
     private List<ChiTietHoaDon> chiTietList;
     private MainFrame mainFrame;
     private String phuongThuc;
+    private JEditorPane htmlPane;
+
+    // 🟢 2 biến mới để chứa thông tin Voucher
+    private String maVoucher = null;
+    private String qrUrl = null;
 
     public InvoicePreviewDialog(MainFrame owner, HoaDon hoaDon, List<ChiTietHoaDon> chiTietList, String phuongThuc) {
         super(owner, "Xem trước hóa đơn", true);
@@ -29,18 +34,28 @@ public class InvoicePreviewDialog extends JDialog {
         initUI();
     }
 
+    // 🟢 Hàm mới để nhận dữ liệu Voucher từ HoaDonPanel
+    public void setVoucherInfo(String maVoucher, String qrUrl) {
+        this.maVoucher = maVoucher;
+        this.qrUrl = qrUrl;
+        // Phải nạp lại HTML để chèn thêm khung Voucher vào đuôi bill
+        if (htmlPane != null) {
+            htmlPane.setText(generateHtmlPreview());
+        }
+    }
+
     private void initUI() {
-        setSize(450, 600);
+        setSize(450, 680); // Tăng chiều cao lên một chút để chứa mã QR
         setLocationRelativeTo(mainFrame);
         setLayout(new BorderLayout());
         getContentPane().setBackground(UiTheme.DARK);
 
         // 1. Vùng hiển thị hóa đơn (Mô phỏng giấy in bill màu trắng)
-        JEditorPane htmlPane = new JEditorPane();
+        htmlPane = new JEditorPane();
         htmlPane.setContentType("text/html");
         htmlPane.setEditable(false);
         htmlPane.setText(generateHtmlPreview());
-        htmlPane.setBackground(Color.WHITE); // Nền trắng như giấy
+        htmlPane.setBackground(Color.WHITE);
 
         JScrollPane scrollPane = new JScrollPane(htmlPane);
         scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -73,11 +88,12 @@ public class InvoicePreviewDialog extends JDialog {
         StringBuilder sb = new StringBuilder();
         sb.append("<html><body style='font-family: sans-serif; padding: 10px; color: #000;'>");
         sb.append("<h2 style='text-align: center; margin-bottom: 5px;'>TVT - QUÁN MÌ CAY</h2>");
-        sb.append("<h3 style='text-align: center; margin-top: 0;'>HÓA ĐƠN TẠM TÍNH</h3>");
+        sb.append("<h3 style='text-align: center; margin-top: 0;'>HÓA ĐƠN THANH TOÁN</h3>");
         sb.append("<hr style='border: 1px dashed #000;'>");
 
         sb.append("<p><b>Ngày:</b> ").append(sdf.format(new Date())).append("<br>");
         sb.append("<b>Mã HĐ:</b> HD").append(hoaDon.getId()).append("<br>");
+        sb.append("<b>P.Thức:</b> ").append(phuongThuc).append("<br>");
         sb.append("<b>Nhân viên:</b> ").append(mainFrame.getNhanVien().getTen()).append("</p>");
 
         sb.append("<table width='100%' style='border-collapse: collapse;'>");
@@ -99,10 +115,27 @@ public class InvoicePreviewDialog extends JDialog {
                 .append(NumberUtils.formatVND(hoaDon.getTongTien())).append("</td></tr>");
         sb.append("<tr><td align='left'>Giảm giá:</td><td align='right'>-")
                 .append(NumberUtils.formatVND(hoaDon.getGiamGia())).append("</td></tr>");
-        sb.append("<tr><td align='left'><h2>TỔNG:</h2></td><td align='right'><h2 style='color: red;'>")
+        sb.append("<tr><td align='left'><h2>TỔNG CỘNG:</h2></td><td align='right'><h2 style='color: red;'>")
                 .append(NumberUtils.formatVND(hoaDon.getThanhTien())).append("</h2></td></tr>");
         sb.append("</table>");
 
+        // ==========================================
+        // 🟢 CHÈN KHUNG VOUCHER (NẾU CÓ)
+        // ==========================================
+        if (maVoucher != null && qrUrl != null) {
+            sb.append(
+                    "<div style='margin-top: 15px; border: 2px dashed #d35400; padding: 10px; text-align: center; background-color: #fff3e0;'>");
+            sb.append("<h3 style='color: #d35400; margin: 0 0 5px 0;'>🎁 TẶNG VOUCHER -10%</h3>");
+            sb.append("<p style='font-size: 11px; margin: 0 0 10px 0;'>Cho lần ăn tiếp theo</p>");
+            // Hiển thị mã QR trực tiếp từ URL ảnh (QuickChart API)
+            sb.append("<img src='").append(qrUrl).append("' width='120' height='120'><br>");
+            sb.append("<p style='font-size: 12px; font-weight: bold; margin-top: 5px;'>MÃ: ").append(maVoucher)
+                    .append("</p>");
+            sb.append("</div>");
+        }
+        // ==========================================
+
+        sb.append("<p style='text-align: center; margin-top: 20px;'>Cảm ơn quý khách và hẹn gặp lại!</p>");
         sb.append("</body></html>");
         return sb.toString();
     }
@@ -120,9 +153,12 @@ public class InvoicePreviewDialog extends JDialog {
             if (!filePath.endsWith(".pdf")) {
                 filePath += ".pdf";
             }
-            PDFUtils.exportHoaDonToPDF(hoaDon, chiTietList, filePath, phuongThuc, mainFrame.getNhanVien().getTen());
+
+            PDFUtils.exportHoaDonToPDF(hoaDon, chiTietList, filePath, phuongThuc, mainFrame.getNhanVien().getTen(),
+                    maVoucher, qrUrl);
+
             JOptionPane.showMessageDialog(this, "✅ Đã lưu hóa đơn PDF tại:\n" + filePath);
-            dispose(); // Tắt popup sau khi in thành công
+            dispose();
         }
     }
 }

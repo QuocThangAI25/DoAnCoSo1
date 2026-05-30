@@ -3,6 +3,7 @@ package view.frame;
 import model.NhanVien;
 import service.NhanVienService;
 import util.UiTheme;
+import view.dialog.DoiMatKhauLoginDialog;
 
 import javax.swing.*;
 import java.awt.*;
@@ -76,10 +77,21 @@ public class LoginFrame extends JFrame {
         btnLogin.setPreferredSize(new Dimension(200, 40));
         btnLogin.addActionListener(e -> login());
 
+        JButton btnDoiMatKhau = new JButton("Đổi mật khẩu");
+        UiTheme.ghostButton(btnDoiMatKhau);
+        btnDoiMatKhau.setPreferredSize(new Dimension(200, 36));
+        btnDoiMatKhau.addActionListener(e -> {
+            DoiMatKhauLoginDialog dlg = new DoiMatKhauLoginDialog(this, nhanVienService, txtTaiKhoan.getText().trim());
+            dlg.setVisible(true);
+        });
+
         gbc.gridy = 3;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
         mainPanel.add(btnLogin, gbc);
+
+        gbc.gridy = 4;
+        mainPanel.add(btnDoiMatKhau, gbc);
 
         JPanel wrapper = new JPanel(new GridBagLayout());
         wrapper.setBackground(UiTheme.BLACK);
