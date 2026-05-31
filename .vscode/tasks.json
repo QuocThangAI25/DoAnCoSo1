@@ -1,0 +1,72 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Count Workspace Lines",
+			"type": "shell",
+			"command": "powershell.exe",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"Set-Location 'c:\\apps\\Code\\DoAnCoSo1'; $sum=0; Get-ChildItem -Recurse -File | ForEach-Object { try { $sum += (Get-Content $_.FullName -ErrorAction Stop | Measure-Object -Line).Lines } catch { } }; Write-Host $sum"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			]
+		},
+		{
+			"label": "Show Git Status",
+			"type": "shell",
+			"command": "powershell.exe",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"Set-Location 'c:\\apps\\Code\\DoAnCoSo1'; Write-Host 'BRANCH:'; git branch --show-current; Write-Host ''; Write-Host 'STATUS (porcelain):'; git status --porcelain; Write-Host ''; Write-Host 'REMOTE:'; git remote -v"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			]
+		},
+		{
+			"label": "Show Git Status CMD",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"cd /d C:\\apps\\Code\\DoAnCoSo1 && echo BRANCH: && git branch --show-current && echo. && echo STATUS: && git status --porcelain && echo. && echo REMOTE: && git remote -v"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			]
+		},
+		{
+			"label": "Git Add Commit Push",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"cd /d C:\\apps\\Code\\DoAnCoSo1 && git add -A && git commit -m \"Lưu thay đổi: cập nhật mã và cấu hình\" || echo No changes to commit && git push origin HEAD"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			]
+		},
+		{
+			"label": "Git Commit via File",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"cd /d C:\\apps\\Code\\DoAnCoSo1 && (echo Lưu thay đổi: cập nhật mã và cấu hình)>commitmsg.txt && git add -A && git commit -F commitmsg.txt || echo No changes to commit && del /f commitmsg.txt 2>nul || echo && git push origin HEAD"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			]
+		}
+	]
+}
