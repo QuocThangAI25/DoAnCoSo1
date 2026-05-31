@@ -84,7 +84,6 @@ public class ThongKePanel extends JPanel {
         spnNgay.setFont(UiTheme.bold(13));
         topPanel.add(spnNgay);
 
-        // 🟢 SỰ KIỆN: Đổi định dạng VÀ RESET VỀ HIỆN TẠI
         cbLoaiThoiGian.addActionListener(e -> {
             String type = cbLoaiThoiGian.getSelectedItem().toString();
             JSpinner.DateEditor editor;
@@ -96,8 +95,6 @@ public class ThongKePanel extends JPanel {
                 editor = new JSpinner.DateEditor(spnNgay, "dd/MM/yyyy");
             }
             spnNgay.setEditor(editor);
-
-            // 🟢 Tự động nhảy về thời gian của ngày hôm nay
             spnNgay.setValue(new Date());
         });
 
@@ -270,19 +267,28 @@ public class ThongKePanel extends JPanel {
             prefix = "h";
         }
 
+        double maxVal = 0; // 🟢 Biến dùng để lưu giữ cột cao nhất
+
         for (int i = start; i <= end; i++) {
             String label = ("Theo ngày".equals(loaiThoiGian)) ? i + prefix : prefix + i;
             labels.append(label).append("|");
 
-            // Ép kiểu Doanh thu (Chia 1.000) và làm tròn để số hiển thị trên cột đẹp hơn
             double doanhThu = chartData.getOrDefault(i, 0.0);
             double val = Math.round((doanhThu / 1000.0) * 10.0) / 10.0;
             values.append(val).append(",");
+
+            // Tìm giá trị lớn nhất trong tất cả các cột
+            if (val > maxVal) {
+                maxVal = val;
+            }
         }
 
         String labelStr = labels.toString().replaceAll("\\|+$", "");
         String valueStr = values.toString().replaceAll(",+$", "");
 
+        // 🟢 Nâng "trần nhà" (trục Y) lên 20% so với cột cao nhất để tạo khoảng trống
+        // cho số
+        final double suggestedMax = (maxVal == 0) ? 100 : (maxVal + maxVal * 0.2);
         chartPanelArea.removeAll();
         JLabel loading = new JLabel("Đang tải biểu đồ Doanh thu...", SwingConstants.CENTER);
         UiTheme.label(loading);
@@ -293,13 +299,11 @@ public class ThongKePanel extends JPanel {
         SwingWorker<Image, Void> worker = new SwingWorker<Image, Void>() {
             @Override
             protected Image doInBackground() throws Exception {
-                // 🟢 ĐÃ THÊM: "plugins:{datalabels:...}" để hiển thị con số nằm phía trên cột
-                // (anchor:'end', align:'top')
-                // 🟢 ĐÃ THÊM: "layout:{padding:{top:25}}" để tránh việc số bị cắt lẹm ở đỉnh
-                // biểu đồ
+                // 🟢 Đã thêm "padding:20" vào legend và "suggestedMax" vào trục Y
                 String jsonChart = "{type:'bar',data:{labels:['" + labelStr.replace("|", "','")
                         + "'],datasets:[{label:'Doanh thu (Nghìn VNĐ)',data:[" + valueStr
-                        + "],backgroundColor:'rgb(231, 76, 60)'}]},options:{layout:{padding:{top:25}},plugins:{datalabels:{anchor:'end',align:'top',color:'white',font:{size:10,weight:'bold'}}},legend:{labels:{fontColor:'white'}},scales:{xAxes:[{ticks:{fontColor:'white',fontSize:10}}],yAxes:[{ticks:{fontColor:'white',beginAtZero:true}}]}}}";
+                        + "],backgroundColor:'rgb(231, 76, 60)'}]},options:{layout:{padding:{top:25}},plugins:{datalabels:{anchor:'end',align:'top',color:'white',font:{size:10,weight:'bold'}}},legend:{labels:{fontColor:'white',padding:20}},scales:{xAxes:[{ticks:{fontColor:'white',fontSize:10}}],yAxes:[{ticks:{fontColor:'white',beginAtZero:true,suggestedMax:"
+                        + suggestedMax + "}}]}}}";
 
                 String encodedJson = URLEncoder.encode(jsonChart, "UTF-8");
                 String chartUrl = "https://quickchart.io/chart?c=" + encodedJson + "&w=600&h=400&bkg=transparent";

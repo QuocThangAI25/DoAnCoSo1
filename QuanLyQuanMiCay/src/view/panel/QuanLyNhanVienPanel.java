@@ -37,7 +37,7 @@ public class QuanLyNhanVienPanel extends JPanel {
         UiTheme.panel(this);
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        String[] columns = {"ID", "Họ tên", "Tài khoản", "Vai trò", "Trạng thái"};
+        String[] columns = { "ID", "Họ tên", "Tài khoản", "Vai trò", "Trạng thái" };
         tableModel = new DefaultTableModel(columns, 0);
         table = new JTable(tableModel);
         UiTheme.table(table);
@@ -53,7 +53,8 @@ public class QuanLyNhanVienPanel extends JPanel {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         JLabel lblTen = new JLabel("Họ tên:");
         UiTheme.label(lblTen);
         inputPanel.add(lblTen, gbc);
@@ -62,7 +63,8 @@ public class QuanLyNhanVienPanel extends JPanel {
         gbc.gridx = 1;
         inputPanel.add(txtTen, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         JLabel lblTk = new JLabel("Tài khoản:");
         UiTheme.label(lblTk);
         inputPanel.add(lblTk, gbc);
@@ -71,7 +73,8 @@ public class QuanLyNhanVienPanel extends JPanel {
         gbc.gridx = 1;
         inputPanel.add(txtTaiKhoan, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
         JLabel lblMk = new JLabel("Mật khẩu:");
         UiTheme.label(lblMk);
         inputPanel.add(lblMk, gbc);
@@ -80,31 +83,44 @@ public class QuanLyNhanVienPanel extends JPanel {
         gbc.gridx = 1;
         inputPanel.add(txtMatKhau, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.gridx = 0;
+        gbc.gridy = 3;
         JLabel lblVt = new JLabel("Vai trò:");
         UiTheme.label(lblVt);
         inputPanel.add(lblVt, gbc);
-        cbVaiTro = new JComboBox<>(new String[]{"nhan_vien", "admin"});
+        cbVaiTro = new JComboBox<>(new String[] { "nhan_vien", "admin" });
         gbc.gridx = 1;
         inputPanel.add(cbVaiTro, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 4;
+        gbc.gridx = 0;
+        gbc.gridy = 4;
         JLabel lblTt = new JLabel("Trạng thái:");
         UiTheme.label(lblTt);
         inputPanel.add(lblTt, gbc);
-        cbTrangThai = new JComboBox<>(new String[]{"Đang làm việc", "Đã nghỉ"});
+        cbTrangThai = new JComboBox<>(new String[] { "Đang làm việc", "Đã nghỉ" });
         gbc.gridx = 1;
         inputPanel.add(cbTrangThai, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 5;
+        // 🟢 CHỈNH SỬA GIAO DIỆN DÀN NÚT BẤM (Đều đặn, cùng kích thước 130x35)
+        gbc.gridx = 0;
+        gbc.gridy = 5;
         gbc.gridwidth = 2;
-        JPanel btnPanel = new JPanel(new FlowLayout());
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         UiTheme.panel(btnPanel);
+
         JButton btnThem = new JButton("Thêm");
         JButton btnSua = new JButton("Cập nhật");
         JButton btnXoa = new JButton("Xóa");
         JButton btnLamMoi = new JButton("Làm mới");
         JButton btnResetMk = new JButton("Reset mật khẩu");
+
+        Dimension btnSize = new Dimension(130, 35);
+        btnThem.setPreferredSize(btnSize);
+        btnSua.setPreferredSize(btnSize);
+        btnXoa.setPreferredSize(btnSize);
+        btnLamMoi.setPreferredSize(btnSize);
+        btnResetMk.setPreferredSize(btnSize);
+
         UiTheme.primaryButton(btnThem);
         UiTheme.outlineButton(btnSua);
         UiTheme.ghostButton(btnXoa);
@@ -148,9 +164,9 @@ public class QuanLyNhanVienPanel extends JPanel {
             int id = (int) tableModel.getValueAt(row, 0);
             String ten = tableModel.getValueAt(row, 1).toString();
             int confirm = JOptionPane.showConfirmDialog(this,
-                "Bạn có chắc muốn reset mật khẩu của " + ten + " về mặc định?",
-                "Xác nhận reset",
-                JOptionPane.YES_NO_OPTION);
+                    "Bạn có chắc muốn reset mật khẩu của " + ten + " về mặc định?",
+                    "Xác nhận reset",
+                    JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 nhanVienService.resetMatKhau(id);
                 loadData();
@@ -181,12 +197,12 @@ public class QuanLyNhanVienPanel extends JPanel {
 
         for (NhanVien nv : list) {
             String trangThai = nv.isTrangThai() ? "Đang làm việc" : "Đã nghỉ";
-            tableModel.addRow(new Object[]{
-                nv.getId(),
-                nv.getTen(),
-                nv.getTaiKhoan(),
-                nv.getVaiTro(),
-                trangThai
+            tableModel.addRow(new Object[] {
+                    nv.getId(),
+                    nv.getTen(),
+                    nv.getTaiKhoan(),
+                    nv.getVaiTro(),
+                    trangThai
             });
         }
     }
@@ -270,9 +286,9 @@ public class QuanLyNhanVienPanel extends JPanel {
         }
 
         int confirm = JOptionPane.showConfirmDialog(this,
-            "Bạn có chắc muốn xóa nhân viên " + ten + "?",
-            "Xác nhận xóa",
-            JOptionPane.YES_NO_OPTION);
+                "Bạn có chắc muốn xóa nhân viên " + ten + "?",
+                "Xác nhận xóa",
+                JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
             nhanVienService.xoa(id);

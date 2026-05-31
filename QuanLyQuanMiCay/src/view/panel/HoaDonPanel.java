@@ -114,7 +114,7 @@ public class HoaDonPanel extends JPanel {
         gbc.gridy = 1;
         gbc.weightx = 0;
         gbc.anchor = GridBagConstraints.WEST;
-        JLabel lblGiamGiaTitle = new JLabel("Giảm giá:");
+        JLabel lblGiamGiaTitle = new JLabel("Mã giảm giá:");
         UiTheme.label(lblGiamGiaTitle);
         summaryPanel.add(lblGiamGiaTitle, gbc);
 
