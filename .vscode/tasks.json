@@ -67,6 +67,32 @@
 			"problemMatcher": [
 				"$tsc"
 			]
+		},
+		{
+			"label": "Show Last Commit Files",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"cd /d C:\\apps\\Code\\DoAnCoSo1 && echo LAST COMMIT: && git log -1 --pretty=format:\"%H %s\" && echo. && echo FILES IN LAST COMMIT: && git show --name-only --pretty=format:\"\" HEAD"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			]
+		},
+		{
+			"label": "Inspect Last Commit",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"cd /d C:\\apps\\Code\\DoAnCoSo1 && echo LAST COMMIT: && git log -1 --pretty=format:%H && echo. && echo MESSAGE: && git log -1 --pretty=%B && echo. && echo FILES IN LAST COMMIT: && git show --name-only HEAD"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			]
 		}
 	]
 }
